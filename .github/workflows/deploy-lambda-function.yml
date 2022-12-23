@@ -1,35 +1,26 @@
-#Name of my workflows
-name: Deploy Lambda function
+name: deploy to lambda
 on:
   push:
     branches:
       - main
 
 jobs:
-  deploy-lambda-function:
+  deploy_source:
+    name: build and deploy lambda
     runs-on: ubuntu-latest
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v3
+      - name: npm install and build
+      - name: zip
+        uses: montudor/action-zip@v0.1.0
         with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Install dependencies with LambCI
-        uses: docker://lambci/lambda:build-python3.8
+          args: zip -qq -r ./bundle.zip ./
+      - name: default deploy
+        uses: appleboy/lambda-action@master
         with:
-            entrypoint: pip
-            args: install -r requirements.txt --target .
-
-      - name: Bundle function with dependencies
-        run: |
-            zip -r build.zip .
-
-      - name: Copy function zip file to S3
-        run: |
-            aws s3 cp build.zip s3://api-build-package/visitorFunction.zip
-
-      - name: Update function from S3
-        run: |
-            aws lambda update-function-code --function-name visitorFunction --s3-bucket api-build-package --s3-key visitorFunction.zip
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{  secrets.AWS_REGION  }}
+          function_name: visitorFunction
+          zip_file: bundle.zip

@@ -1,0 +1,35 @@
+#Name of my workflows
+name: Deploy Lambda function
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-lambda-function:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install dependencies with LambCI
+        uses: docker://lambci/lambda:build-python3.8
+        with:
+            entrypoint: pip
+            args: install -r requirements.txt --target .
+
+      - name: Bundle function with dependencies
+        run: |
+            zip -r build.zip .
+
+      - name: Copy function zip file to S3
+        run: |
+            aws s3 cp build.zip s3://api-build-package/visitorFunction.zip
+
+      - name: Update function from S3
+        run: |
+            aws lambda update-function-code --function-name visitorFunction --s3-bucket api-build-package --s3-key visitorFunction.zip

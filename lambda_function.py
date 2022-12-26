@@ -4,12 +4,12 @@ import boto3
 def lambda_handler(event,context):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('challenge_DB')
-    # response = {
-    #         'headers': {
-    #             'Content-Type': 'application/json',
-    #             'Access-Control-Allow-Origin': '*'
-    #         }
-    # }
+    response = {
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        }
+    }
 
     if str(event['routeKey']) == "GET /items/{id}":
         item_id = event['pathParameters']['id']
@@ -18,17 +18,9 @@ def lambda_handler(event,context):
                 'id':item_id
             },
         )
-        # reponse['body'] = result['Item']
-
         visitors = result['Item']['visitors']
-        return {
-            'statusCode': 200,
-            'body': json.dumps(int(visitors)),
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            }
-        }
+        response['body'] = json.dumps(int(visitors))
+        response['statusCode'] = 200
 
     elif  event['routeKey'] == 'PUT /items':
         request_body = json.loads(event['body'])
@@ -38,21 +30,11 @@ def lambda_handler(event,context):
                 'id' : request_body['id'],
                 'visitors' : request_body['visitors']
             })
-        return {
-            'statusCode': 200,
-            'body': json.dumps(response),
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            }
-        }
+        response['statusCode'] = 200
+        response['body'] = " update successfully "
 
     else:
-        return {
-            'statusCode': 400,
-            'body': json.dumps(event['routeKey']),
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            }
-        }
+        response['statusCode'] = 400
+        response['body'] = "error"
+
+    return response

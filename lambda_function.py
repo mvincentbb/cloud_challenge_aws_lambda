@@ -2,10 +2,14 @@ import json
 import boto3
 
 def lambda_handler(event,context):
-
-
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('challenge_DB')
+    # response = {
+    #         'headers': {
+    #             'Content-Type': 'application/json',
+    #             'Access-Control-Allow-Origin': '*'
+    #         }
+    # }
 
     if str(event['routeKey']) == "GET /items/{id}":
         item_id = event['pathParameters']['id']
@@ -15,9 +19,11 @@ def lambda_handler(event,context):
             },
         )
         # reponse['body'] = result['Item']
+
+        visitors = result['Item']['visitors']
         return {
             'statusCode': 200,
-            'body': json.dumps(str(result['Item'])),
+            'body': json.dumps(int(visitors)),
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
@@ -27,7 +33,7 @@ def lambda_handler(event,context):
     elif  event['routeKey'] == 'PUT /items':
         request_body = json.loads(event['body'])
         #Put item in DynamoDB
-        response = table.put_item(
+        result = table.put_item(
             Item={
                 'id' : request_body['id'],
                 'visitors' : request_body['visitors']

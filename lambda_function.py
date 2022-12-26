@@ -15,13 +15,14 @@ import boto3
 #     response = {
 #         'statusCode': 200,
 #         'headers': {
-#             'Content-Type': 'application/json'
+#             'Content-Type': 'application/json',
+#             'Access-Control-Allow-Origin': '*'
 #         }
 #     }
 
 #     #Dispatch based on the route key
 #     try:
-#         if event['routeKey'] == 'GET /items/{id}':
+#         if event['httpMethod'] == 'GET':
 #             #Get item from DynamoDB
 
 #             result = table.get_item(
@@ -30,7 +31,7 @@ import boto3
 #                 },
 #                 )
 #             reponse['body'] = result['Item']
-#         elif event['routeKey'] == 'PUT /items':
+#         elif event['httpMethod'] == 'PUT':
 #             #Parse the request
 
 #             request_body = json.loads(event['body'])
@@ -44,40 +45,63 @@ import boto3
 #             reponse['body'] =  f'Put item '
 
 #         else:
-#             raise ValueError(f'Unsupported route: "{event["routeKey"]}"')
+#             raise ValueError(f'Unsupported route: "{event["httpMethod"]}"')
 
-# except Exception as e:
-#     # Set the response status code to 400 (Bad Request) and the body to the error message
-#     response['statusCode'] = 400
-#     response['body'] = str(e)
-# # Convert the body to a JSON string
-# response['body'] = json.dumps(response['body'])
+#     except Exception as e:
+#         # Set the response status code to 400 (Bad Request) and the body to the error message
+#         response['statusCode'] = 400
+#         response['body'] = str(e)
+#         # Convert the body to a JSON string
+#         response['body'] = json.dumps(response['body'])
 
-# return result
+#     return response
 
 def lambda_handler(event,context):
-    item_id = event['pathParameters']['id']
+
 
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('challenge_DB')
-    response = table.get_item(
-        Key = {
-            'id': "1"
+
+    if str(event['routeKey']) == "GET /items/{id}":
+        item_id = event['pathParameters']['id']
+        result = table.get_item(
+            Key = {
+                'id':item_id
+            },
+        )
+        # reponse['body'] = result['Item']
+        return {
+            'statusCode': 200,
+            'body': json.dumps(str(result['Item'])),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
         }
-    )
-    # statusCode = 200
-    # return {
-    #     "statusCode": statusCode,
-    #     "body": json.dumps(response['Item']),
-    #     "headers": {
-    #         "Content-Type": "application/json"
-    #     }
-    body = json.dumps(str(response['Item']))
-    return {
-        'statusCode': 200,
-        'body': body,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
+
+    elif  event['routeKey'] == 'PUT /items':
+        request_body = json.loads(event['body'])
+        #Put item in DynamoDB
+        response = table.put_item(
+            Item={
+                'id' : request_body['id'],
+                'visitors' : request_body['visitors']
+            })
+        return {
+            'statusCode': 200,
+            'body': json.dumps(response),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
         }
-    }
+
+    else:
+        return {
+            'statusCode': 400,
+            'body': json.dumps(event['routeKey']),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }

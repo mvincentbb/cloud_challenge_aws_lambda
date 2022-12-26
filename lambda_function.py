@@ -1,61 +1,6 @@
 import json
 import boto3
 
-# def lambda_handler(event, context):
-#     # TODO implement
-#     # return {
-#     #     'statusCode': 200,
-#     #     'body': json.dumps('Hello from Lambda!')
-#     # }
-
-#     dynamodb = boto3.resource('dynamodb')
-#     table = dynamodb.Table('challenge_DB')
-
-
-#     response = {
-#         'statusCode': 200,
-#         'headers': {
-#             'Content-Type': 'application/json',
-#             'Access-Control-Allow-Origin': '*'
-#         }
-#     }
-
-#     #Dispatch based on the route key
-#     try:
-#         if event['httpMethod'] == 'GET':
-#             #Get item from DynamoDB
-
-#             result = table.get_item(
-#                 Key = {
-#                     'id':'1'
-#                 },
-#                 )
-#             reponse['body'] = result['Item']
-#         elif event['httpMethod'] == 'PUT':
-#             #Parse the request
-
-#             request_body = json.loads(event['body'])
-#             #Put item in DynamoDB
-#             table.put_item(
-#                 Item={
-#                     'id' : event['pathParameters']['id'],
-#                     'visitors' : 1
-#                 }
-#                 )
-#             reponse['body'] =  f'Put item '
-
-#         else:
-#             raise ValueError(f'Unsupported route: "{event["httpMethod"]}"')
-
-#     except Exception as e:
-#         # Set the response status code to 400 (Bad Request) and the body to the error message
-#         response['statusCode'] = 400
-#         response['body'] = str(e)
-#         # Convert the body to a JSON string
-#         response['body'] = json.dumps(response['body'])
-
-#     return response
-
 def lambda_handler(event,context):
 
 
